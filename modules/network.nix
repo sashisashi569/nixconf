@@ -31,10 +31,10 @@ in {
         "1.1.1.1#cloudflare-dns.com"
         "8.8.8.8#dns.google"
       ];
-      extraConfig = ''
-        DNSStubListener=yes
-        MulticastDNS=yes
-      '';
+      settings = {
+        DNSStubListener = "yes";
+        MulticastDNS    = "yes";
+      };
     };
 
     services.tailscale = lib.mkIf cfg.tailscale.enable {
