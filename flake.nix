@@ -45,6 +45,11 @@
     #   nixconf.homed.enable         = true;
     #   nixconf.packages.enable      = true;
     #   nixconf.packages.extra       = [ pkgs.firefox ];
+    #
+    # Or enable everything at once:
+    #
+    #   nixconf.enable = true;  # sets all nixconf.*.enable = true (mkDefault)
+    #   nixconf.boot.luks.device = "/dev/disk/by-uuid/xxxx-…";  # still override freely
     # -----------------------------------------------------------------------
     nixosModules = {
       boot      = bootModule;
@@ -57,7 +62,7 @@
       homed     = ./modules/homed.nix;
       packages  = ./modules/packages.nix;
 
-      # Convenience alias: imports every module above.
+      # Imports every module and registers nixconf.enable (enable-all shortcut).
       default = {
         imports = [
           bootModule
@@ -69,6 +74,7 @@
           ./modules/security.nix
           ./modules/homed.nix
           ./modules/packages.nix
+          ./modules/all.nix
         ];
       };
     };
