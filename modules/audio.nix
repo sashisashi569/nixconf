@@ -1,14 +1,28 @@
-{ ... }: {
-  # PipeWire — replaces PulseAudio and JACK
-  hardware.pulseaudio.enable = false;
-  security.rtkit.enable      = true;   # real-time scheduling for audio threads
+{ config, lib, ... }:
+let
+  cfg = config.nixconf.audio;
+in {
+  options.nixconf.audio = {
+    enable = lib.mkEnableOption "PipeWire audio (ALSA, PulseAudio and JACK compatibility)";
 
-  services.pipewire = {
-    enable            = true;
-    alsa.enable       = true;
-    alsa.support32Bit = true;   # 32-bit Steam / Wine apps
-    pulse.enable      = true;   # PulseAudio compatibility
-    jack.enable       = true;   # JACK compatibility
-    wireplumber.enable = true;  # session/policy manager
+    support32Bit = lib.mkOption {
+      type    = lib.types.bool;
+      default = true;
+      description = "Enable 32-bit ALSA support (required for Steam and Wine).";
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
+    hardware.pulseaudio.enable = false;
+    security.rtkit.enable      = true;
+
+    services.pipewire = {
+      enable             = true;
+      alsa.enable        = true;
+      alsa.support32Bit  = cfg.support32Bit;
+      pulse.enable       = true;
+      jack.enable        = true;
+      wireplumber.enable = true;
+    };
   };
 }

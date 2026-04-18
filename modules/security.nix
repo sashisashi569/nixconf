@@ -1,40 +1,51 @@
-# YubiKey (smart card / FIDO2 / U2F / GPG) + GNOME Keyring
-#
-# After first login, register U2F credential:
-#   mkdir -p ~/.config/Yubico
-#   pamu2fcfg >> ~/.config/Yubico/u2f_keys
-{ pkgs, ... }: {
-  # Smart-card daemon (YubiKey PIV, OpenPGP card)
-  services.pcscd.enable       = true;
-  services.udev.packages      = [ pkgs.yubikey-personalization ];
+{ config, lib, pkgs, ... }:
+let
+  cfg = config.nixconf.security;
+in {
+  options.nixconf.security = {
+    enable = lib.mkEnableOption "security tooling (YubiKey, GPG agent, GNOME Keyring, seahorse)";
 
-  # PAM FIDO2/U2F — adds YubiKey as a second factor for sudo / login
-  security.pam.u2f = {
-    enable = true;
-    settings.cue = true;   # print "Touch YubiKey" prompt
+    pam.u2f.enable = lib.mkOption {
+      type    = lib.types.bool;
+      default = true;
+      description = ''
+        Enable PAM U2F so the YubiKey can be used as a second factor
+        for sudo and login.  After enabling, register the key with:
+          mkdir -p ~/.config/Yubico
+          pamu2fcfg >> ~/.config/Yubico/u2f_keys
+      '';
+    };
   };
 
-  # GPG agent with SSH and smart-card support
-  programs.gnupg.agent = {
-    enable           = true;
-    enableSSHSupport  = true;
-    pinentryPackage  = pkgs.pinentry-gnome3;
-  };
+  config = lib.mkIf cfg.enable {
+    services.pcscd.enable  = true;
+    services.udev.packages = [ pkgs.yubikey-personalization ];
 
-  # GNOME Keyring — unlocked on login via PAM
-  services.gnome.gnome-keyring.enable = true;
-  security.pam.services = {
-    login.enableGnomeKeyring  = true;
-    greetd.enableGnomeKeyring = true;
-  };
+    security.pam.u2f = lib.mkIf cfg.pam.u2f.enable {
+      enable           = true;
+      settings.cue     = true;
+    };
 
-  environment.systemPackages = with pkgs; [
-    yubikey-personalization   # ykpers — personalise OTP slots
-    yubikey-manager           # ykman — general management CLI
-    yubico-piv-tool           # PIV operations
-    yubioath-flutter          # TOTP/HOTP GUI (Yubico Authenticator)
-    pam_u2f                   # PAM module (also used as library)
-    seahorse                  # GNOME Keyring GUI
-    gnome-keyring
-  ];
+    programs.gnupg.agent = {
+      enable           = true;
+      enableSSHSupport  = true;
+      pinentryPackage  = pkgs.pinentry-gnome3;
+    };
+
+    services.gnome.gnome-keyring.enable = true;
+    security.pam.services = {
+      login.enableGnomeKeyring  = true;
+      greetd.enableGnomeKeyring = true;
+    };
+
+    environment.systemPackages = with pkgs; [
+      yubikey-personalization
+      yubikey-manager
+      yubico-piv-tool
+      yubioath-flutter
+      pam_u2f
+      seahorse
+      gnome-keyring
+    ];
+  };
 }

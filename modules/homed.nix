@@ -1,5 +1,12 @@
-# systemd-homed — portable, encrypted home directories
-# Create users with: homectl create <user> --storage=luks --fs-type=ext4
-{ ... }: {
-  services.homed.enable = true;
+{ config, lib, ... }:
+let
+  cfg = config.nixconf.homed;
+in {
+  options.nixconf.homed = {
+    enable = lib.mkEnableOption "systemd-homed (portable encrypted home directories)";
+  };
+
+  config = lib.mkIf cfg.enable {
+    services.homed.enable = true;
+  };
 }

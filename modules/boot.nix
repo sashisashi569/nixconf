@@ -1,39 +1,68 @@
-# Boot stack: systemd-initrd + LUKS/cryptenroll + lanzaboote (UKI + Secure Boot)
-#
-# One-time setup (before enabling lanzaboote):
-#   1. sbctl create-keys
-#   2. sbctl enroll-keys --microsoft   # keep MS keys for UEFI firmware updates
-#   3. Enroll FIDO2:  systemd-cryptenroll /dev/nvme0n1p2 --fido2-device=auto
-#      Enroll TPM2:   systemd-cryptenroll /dev/nvme0n1p2 --tpm2-device=auto --tpm2-pcrs=0+2+7
-{ lib, pkgs, ... }: {
-  # systemd in initrd — required for systemd-cryptenroll unlocking
-  boot.initrd.systemd.enable = true;
+{ config, lib, pkgs, ... }:
+let
+  cfg = config.nixconf.boot;
+in {
+  options.nixconf.boot = {
+    enable = lib.mkEnableOption "lanzaboote (Secure Boot + UKI), systemd-initrd, systemd-cryptenroll";
 
-  # Lanzaboote: replaces systemd-boot, builds signed UKIs, enables Secure Boot
-  boot.loader.systemd-boot.enable  = lib.mkForce false;
-  boot.loader.efi.canTouchEfiVariables = true;
-  boot.lanzaboote = {
-    enable    = true;
-    pkiBundle = "/etc/secureboot";   # populated by sbctl
+    pkiBundle = lib.mkOption {
+      type    = lib.types.str;
+      default = "/etc/secureboot";
+      example = "/etc/secureboot";
+      description = "Directory that sbctl uses to store Secure Boot keys (pkiBundle).";
+    };
+
+    luks.device = lib.mkOption {
+      type    = lib.types.str;
+      default = "";
+      example = "/dev/disk/by-uuid/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
+      description = ''
+        LUKS block device to register in the initrd crypttab.
+        Leave empty to omit the crypttab entry (e.g. if the host
+        configuration defines it separately).
+      '';
+    };
+
+    fido2.enable = lib.mkOption {
+      type    = lib.types.bool;
+      default = true;
+      description = "Add fido2-device=auto to the crypttab entry (YubiKey unlock).";
+    };
+
+    tpm2.enable = lib.mkOption {
+      type    = lib.types.bool;
+      default = true;
+      description = "Add tpm2-device=auto to the crypttab entry and enable TPM2 userspace.";
+    };
   };
 
-  # LUKS device — replace UUID with: blkid /dev/nvme0n1p2
-  boot.initrd.luks.devices."cryptroot" = {
-    device             = "/dev/disk/by-uuid/REPLACE-LUKS-UUID";
-    # systemd-cryptenroll tokens: FIDO2 (YubiKey) and/or TPM2
-    crypttabExtraOpts  = [ "fido2-device=auto" "tpm2-device=auto" ];
-  };
+  config = lib.mkIf cfg.enable {
+    boot.initrd.systemd.enable = true;
 
-  # TPM2 userspace
-  security.tpm2 = {
-    enable              = true;
-    pkcs11.enable       = true;
-    tctiEnvironment.enable = true;
-  };
+    boot.loader.systemd-boot.enable      = lib.mkForce false;
+    boot.loader.efi.canTouchEfiVariables = true;
 
-  environment.systemPackages = with pkgs; [
-    sbctl       # Secure Boot key/signature management
-    tpm2-tools
-    tpm2-tss
-  ];
+    boot.lanzaboote = {
+      enable    = true;
+      pkiBundle = cfg.pkiBundle;
+    };
+
+    boot.initrd.luks.devices = lib.mkIf (cfg.luks.device != "") {
+      cryptroot = {
+        device            = cfg.luks.device;
+        crypttabExtraOpts =
+          lib.optional cfg.fido2.enable "fido2-device=auto" ++
+          lib.optional cfg.tpm2.enable  "tpm2-device=auto";
+      };
+    };
+
+    security.tpm2 = lib.mkIf cfg.tpm2.enable {
+      enable                 = true;
+      pkcs11.enable          = true;
+      tctiEnvironment.enable = true;
+    };
+
+    environment.systemPackages = [ pkgs.sbctl ]
+      ++ lib.optionals cfg.tpm2.enable [ pkgs.tpm2-tools pkgs.tpm2-tss ];
+  };
 }

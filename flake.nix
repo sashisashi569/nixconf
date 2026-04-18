@@ -16,17 +16,35 @@
     bootModule = { imports = [ lanzaboote.nixosModules.lanzaboote ./modules/boot.nix ]; };
   in {
     # -----------------------------------------------------------------------
-    # Expose individual modules so consuming flakes can pick what they need:
+    # Each module declares options under the `nixconf.*` namespace.
+    # Nothing is enabled by default — the consuming host configuration
+    # opts in by setting the corresponding enable flag.
     #
-    #   inputs.nixconf.nixosModules.default   — everything
-    #   inputs.nixconf.nixosModules.boot      — lanzaboote + UKI + cryptenroll
-    #   inputs.nixconf.nixosModules.desktop   — Hyprland + kitty + dolphin
-    #   …
+    # Typical consuming flake:
     #
-    # Example consuming flake:
+    #   inputs.nixconf.url = "github:sashisashi569/nixconf";
+    #
     #   nixosConfigurations.mymachine = nixpkgs.lib.nixosSystem {
-    #     modules = [ inputs.nixconf.nixosModules.default ./hosts/mymachine ];
+    #     modules = [
+    #       inputs.nixconf.nixosModules.default  # register all options
+    #       ./hosts/mymachine                    # host-specific config
+    #     ];
     #   };
+    #
+    # Then in ./hosts/mymachine/configuration.nix:
+    #
+    #   nixconf.boot.enable          = true;
+    #   nixconf.boot.luks.device     = "/dev/disk/by-uuid/xxxx-…";
+    #   nixconf.desktop.enable       = true;
+    #   nixconf.fcitx5.enable        = true;
+    #   nixconf.network.enable       = true;
+    #   nixconf.network.tailscale.enable = true;
+    #   nixconf.audio.enable         = true;
+    #   nixconf.bluetooth.enable     = true;
+    #   nixconf.security.enable      = true;
+    #   nixconf.homed.enable         = true;
+    #   nixconf.packages.enable      = true;
+    #   nixconf.packages.extra       = [ pkgs.firefox ];
     # -----------------------------------------------------------------------
     nixosModules = {
       boot      = bootModule;

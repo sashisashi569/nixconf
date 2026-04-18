@@ -1,17 +1,32 @@
-{ pkgs, ... }: {
-  hardware.bluetooth = {
-    enable       = true;
-    powerOnBoot  = true;
-    settings.General = {
-      Enable     = "Source,Sink,Media,Socket";
-      Experimental = true;   # enables battery reporting, etc.
+{ config, lib, pkgs, ... }:
+let
+  cfg = config.nixconf.bluetooth;
+in {
+  options.nixconf.bluetooth = {
+    enable = lib.mkEnableOption "Bluetooth (bluez + blueman)";
+
+    powerOnBoot = lib.mkOption {
+      type    = lib.types.bool;
+      default = true;
+      description = "Power on the Bluetooth adapter automatically at boot.";
     };
   };
 
-  services.blueman.enable = true;
+  config = lib.mkIf cfg.enable {
+    hardware.bluetooth = {
+      enable      = true;
+      powerOnBoot = cfg.powerOnBoot;
+      settings.General = {
+        Enable       = "Source,Sink,Media,Socket";
+        Experimental = true;
+      };
+    };
 
-  environment.systemPackages = with pkgs; [
-    blueman
-    bluetuith   # TUI Bluetooth manager
-  ];
+    services.blueman.enable = true;
+
+    environment.systemPackages = with pkgs; [
+      blueman
+      bluetuith
+    ];
+  };
 }
