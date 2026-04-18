@@ -1,52 +1,58 @@
 {
-  description = "NixOS flake — Hyprland + lanzaboote + home-manager standalone";
+  description = "Reusable NixOS modules — import as flake input and enable via nixosModules";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-
-    home-manager = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    lanzaboote = {
+    nixpkgs.url    = "github:NixOS/nixpkgs/nixos-unstable";
+    lanzaboote     = {
       url = "github:nix-community/lanzaboote";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, lanzaboote, ... } @ inputs:
+  outputs = { self, nixpkgs, lanzaboote, ... }:
   let
-    system   = "x86_64-linux";
-    username = "youruser";   # ← change to your username
-    hostname = "nixos";      # ← change to your hostname
-    pkgs     = nixpkgs.legacyPackages.${system};
+    # boot.nix relies on options provided by the lanzaboote NixOS module,
+    # so bundle them together as a single composable unit.
+    bootModule = { imports = [ lanzaboote.nixosModules.lanzaboote ./modules/boot.nix ]; };
   in {
-    nixosConfigurations.${hostname} = nixpkgs.lib.nixosSystem {
-      inherit system;
-      specialArgs = { inherit inputs username hostname; };
-      modules = [
-        lanzaboote.nixosModules.lanzaboote
-        ./hosts/nixos
-        ./modules/boot.nix
-        ./modules/desktop.nix
-        ./modules/fcitx5.nix
-        ./modules/network.nix
-        ./modules/audio.nix
-        ./modules/bluetooth.nix
-        ./modules/security.nix
-        ./modules/homed.nix
-        ./modules/packages.nix
-      ];
-    };
+    # -----------------------------------------------------------------------
+    # Expose individual modules so consuming flakes can pick what they need:
+    #
+    #   inputs.nixconf.nixosModules.default   — everything
+    #   inputs.nixconf.nixosModules.boot      — lanzaboote + UKI + cryptenroll
+    #   inputs.nixconf.nixosModules.desktop   — Hyprland + kitty + dolphin
+    #   …
+    #
+    # Example consuming flake:
+    #   nixosConfigurations.mymachine = nixpkgs.lib.nixosSystem {
+    #     modules = [ inputs.nixconf.nixosModules.default ./hosts/mymachine ];
+    #   };
+    # -----------------------------------------------------------------------
+    nixosModules = {
+      boot      = bootModule;
+      desktop   = ./modules/desktop.nix;
+      fcitx5    = ./modules/fcitx5.nix;
+      network   = ./modules/network.nix;
+      audio     = ./modules/audio.nix;
+      bluetooth = ./modules/bluetooth.nix;
+      security  = ./modules/security.nix;
+      homed     = ./modules/homed.nix;
+      packages  = ./modules/packages.nix;
 
-    # Standalone home-manager: run with
-    #   home-manager switch --flake .#${username}@${hostname}
-    homeConfigurations."${username}@${hostname}" =
-      home-manager.lib.homeManagerConfiguration {
-        inherit pkgs;
-        extraSpecialArgs = { inherit inputs username; };
-        modules = [ ./home ];
+      # Convenience alias: imports every module above.
+      default = {
+        imports = [
+          bootModule
+          ./modules/desktop.nix
+          ./modules/fcitx5.nix
+          ./modules/network.nix
+          ./modules/audio.nix
+          ./modules/bluetooth.nix
+          ./modules/security.nix
+          ./modules/homed.nix
+          ./modules/packages.nix
+        ];
       };
+    };
   };
 }
