@@ -45,6 +45,7 @@
     #   nixconf.homed.enable         = true;
     #   nixconf.packages.enable      = true;
     #   nixconf.packages.extra       = [ pkgs.firefox ];
+    #   nixconf.fonts.enable         = true;
     #
     # Or enable everything at once:
     #
@@ -61,6 +62,7 @@
       security  = ./modules/security.nix;
       homed     = ./modules/homed.nix;
       packages  = ./modules/packages.nix;
+      fonts     = ./modules/fonts.nix;
 
       # Imports every module and registers nixconf.enable (enable-all shortcut).
       default = {
@@ -74,6 +76,7 @@
           ./modules/security.nix
           ./modules/homed.nix
           ./modules/packages.nix
+          ./modules/fonts.nix
           ./modules/all.nix
         ];
       };
