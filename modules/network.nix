@@ -24,14 +24,11 @@ in {
     };
 
     services.resolved = {
-      enable      = true;
-      dnssec      = "allow-downgrade";
-      domains     = [ "~." ];
-      fallbackDns = [
-        "1.1.1.1#cloudflare-dns.com"
-        "8.8.8.8#dns.google"
-      ];
+      enable = true;
       settings.Resolve = {
+        DNSSEC          = "allow-downgrade";
+        Domains         = "~.";
+        FallbackDNS     = "1.1.1.1#cloudflare-dns.com 8.8.8.8#dns.google";
         DNSStubListener = "yes";
         MulticastDNS    = "yes";
       };

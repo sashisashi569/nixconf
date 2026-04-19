@@ -7,8 +7,8 @@ in {
 
     pkiBundle = lib.mkOption {
       type    = lib.types.str;
-      default = "/etc/secureboot";
-      example = "/etc/secureboot";
+      default = "/var/lib/sbctl";
+      example = "/var/lib/sbctl";
       description = "Directory that sbctl uses to store Secure Boot keys (pkiBundle).";
     };
 
