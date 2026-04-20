@@ -9,7 +9,7 @@ in {
   config = lib.mkIf cfg.enable {
     system.activationScripts.flatpak-font-access = ''
       if command -v flatpak &>/dev/null; then
-        flatpak override --global \
+        flatpak override --system \
           --filesystem=/run/current-system/sw/share/fonts:ro \
           --filesystem=/run/current-system/sw/share/icons:ro
       fi
