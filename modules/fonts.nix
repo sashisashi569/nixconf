@@ -16,6 +16,22 @@ in {
       fontconfig = {
         allowBitmaps = false;
         antialias    = true;
+
+        hinting = {
+          enable = true;
+          style  = "slight";
+        };
+
+        subpixel = {
+          rgba      = "rgb";
+          lcdfilter = "default";
+        };
+
+        defaultFonts = {
+          serif     = [ "Noto Serif CJK JP" "Noto Serif" ];
+          sansSerif = [ "Noto Sans CJK JP"  "Noto Sans"  ];
+          monospace = [ "Noto Sans Mono CJK JP" "Noto Sans Mono" ];
+        };
       };
     };
   };
