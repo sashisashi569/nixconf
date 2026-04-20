@@ -11,6 +11,7 @@ in {
       fontDir.enable = true;
 
       packages = with pkgs; [
+        dejavu_fonts
         noto-fonts-cjk-sans
         noto-fonts-cjk-serif
       ];
@@ -32,7 +33,7 @@ in {
         defaultFonts = {
           serif     = [ "Noto Serif CJK JP" "Noto Serif" ];
           sansSerif = [ "Noto Sans CJK JP"  "Noto Sans"  ];
-          monospace = [ "Noto Sans Mono CJK JP" "Noto Sans Mono" ];
+          monospace = [ "DejaVu Sans Mono" "Noto Sans Mono CJK JP" ];
         };
       };
     };
