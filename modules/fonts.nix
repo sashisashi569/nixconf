@@ -13,6 +13,12 @@ in {
           --filesystem=/run/current-system/sw/share/fonts:ro \
           --filesystem=/run/current-system/sw/share/icons:ro \
           --filesystem=/nix/store:ro
+
+        for home in /home/* /root; do
+          cache="$home/.var/app"
+          [ -d "$cache" ] && find "$cache" -type d -name fontconfig \
+            -path "*/cache/fontconfig" -exec rm -rf {} + 2>/dev/null || true
+        done
       fi
     '';
 
