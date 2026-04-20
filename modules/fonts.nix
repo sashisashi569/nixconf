@@ -11,7 +11,8 @@ in {
       if command -v flatpak &>/dev/null; then
         flatpak override --system \
           --filesystem=/run/current-system/sw/share/fonts:ro \
-          --filesystem=/run/current-system/sw/share/icons:ro
+          --filesystem=/run/current-system/sw/share/icons:ro \
+          --filesystem=/nix/store:ro
       fi
     '';
 
