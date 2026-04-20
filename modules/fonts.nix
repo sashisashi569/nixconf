@@ -8,6 +8,8 @@ in {
 
   config = lib.mkIf cfg.enable {
     fonts = {
+      fontDir.enable = true;
+
       packages = with pkgs; [
         noto-fonts-cjk-sans
         noto-fonts-cjk-serif
