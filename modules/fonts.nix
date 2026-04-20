@@ -7,6 +7,14 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    system.activationScripts.flatpak-font-access = ''
+      if command -v flatpak &>/dev/null; then
+        flatpak override --global \
+          --filesystem=/run/current-system/sw/share/fonts:ro \
+          --filesystem=/run/current-system/sw/share/icons:ro
+      fi
+    '';
+
     fonts = {
       fontDir.enable = true;
 
