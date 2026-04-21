@@ -12,6 +12,7 @@ in {
     nixconf.audio.enable     = lib.mkDefault true;
     nixconf.bluetooth.enable = lib.mkDefault true;
     nixconf.security.enable  = lib.mkDefault true;
+    nixconf.yubikey.enable   = lib.mkDefault true;
     nixconf.homed.enable     = lib.mkDefault true;
     nixconf.packages.enable  = lib.mkDefault true;
     nixconf.fonts.enable     = lib.mkDefault true;
