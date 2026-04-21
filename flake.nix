@@ -60,6 +60,7 @@
       audio     = ./modules/audio.nix;
       bluetooth = ./modules/bluetooth.nix;
       security  = ./modules/security.nix;
+      yubikey   = ./modules/yubikey.nix;
       homed     = ./modules/homed.nix;
       packages  = ./modules/packages.nix;
       fonts     = ./modules/fonts.nix;
@@ -74,6 +75,7 @@
           ./modules/audio.nix
           ./modules/bluetooth.nix
           ./modules/security.nix
+          ./modules/yubikey.nix
           ./modules/homed.nix
           ./modules/packages.nix
           ./modules/fonts.nix
