@@ -16,5 +16,6 @@ in {
     nixconf.homed.enable     = lib.mkDefault true;
     nixconf.packages.enable  = lib.mkDefault true;
     nixconf.fonts.enable     = lib.mkDefault true;
+    nixconf.keychron.enable  = lib.mkDefault true;
   };
 }
